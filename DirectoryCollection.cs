@@ -17,15 +17,22 @@ public class DirectoryCollection : ObservableCollection<DirectoryEntry> {
         }
     }
 
-    public IEnumerable<TomlString> MarshallToml() {
-        return this.Select(entry => new TomlString {
-            Value = entry.Path
-        });
+    public IEnumerable<TomlString> AsTomlEnumerable(int? limit = null) {
+        int safeLimit = Count;
+        if (limit != null && limit >= 0 && limit < Count) {
+            safeLimit = limit.Value;
+        }
+
+        for (int i = 0; i < safeLimit; i++) {
+            yield return new TomlString {
+                Value = this[i].Path
+            };
+        }
     }
 
-    public TomlArray ToTomlArray() {
+    public TomlArray ToTomlArray(int? limit = null) {
         var arr = new TomlArray();
-        arr.AddRange(MarshallToml());
+        arr.AddRange(AsTomlEnumerable(limit));
         return arr;
     }
 }
