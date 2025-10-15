@@ -12,4 +12,8 @@
       <PackageReference Include="Tommy" Version="3.1.2" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="Graphics/Icon.png" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
 </Project>

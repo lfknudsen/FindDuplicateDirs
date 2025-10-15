@@ -5,11 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xml:lang="en-GB"
         mc:Ignorable="d"
-        Title="MainWindow"
+        Title="DupDirFinder"
         Height="320"
         Width="480"
         MinWidth="320"
         MinHeight="480"
+        Icon="Graphics/Icon.png"
         SizeToContent="WidthAndHeight">
     <Grid>
         <DockPanel LastChildFill="True">
