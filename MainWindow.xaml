@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xml:lang="en-GB"
         mc:Ignorable="d"
         Title="MainWindow"
         Height="320"
@@ -11,17 +12,28 @@
         MinHeight="480"
         SizeToContent="WidthAndHeight">
     <Grid>
-        <StackPanel Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <Button Click="SelectDirs_OnClick" ToolTip="Select directories to traverse.">Add directories</Button>
-                <Button Click="Clear_OnClick" ToolTip="Clear current list of directories.">Clear list</Button>
+        <DockPanel LastChildFill="True">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
+                <Button Click="SelectDirs_OnClick" ToolTip="Select directories to traverse."
+                        Margin="2 2 2 0" Padding="3 3 3 3">
+                    Add directories
+                </Button>
+                <Button Click="Clear_OnClick" ToolTip="Clear current list of directories."
+                        Margin="2 2 2 0" Padding="3 3 3 3">
+                    Clear list
+                </Button>
                 <Button Click="SetInitialDir_OnClick"
-                        ToolTip="Set the initial directory when clicking 'Add directories'.">
+                        ToolTip="Set the initial directory when clicking 'Add directories'."
+                        Margin="2 2 2 0" Padding="3 3 3 3">
                     Set initial directory
                 </Button>
             </StackPanel>
-            <!-- <Label Content="{Binding Source={StaticResource DirList}, Path=Count}"></Label> -->
-            <ListView MinWidth="320" ItemsSource="{Binding Source={StaticResource DirList}}">
+            <StatusBar DockPanel.Dock="Bottom">
+                <StatusBarItem>Directories: </StatusBarItem>
+                <StatusBarItem Content="{Binding Source={StaticResource DirList}, Path=Count}">
+                </StatusBarItem>
+            </StatusBar>
+            <ListView MinWidth="320" Margin="3 3 3 0" ItemsSource="{Binding Source={StaticResource DirList}}">
                 <ListView.View>
                     <GridView
                         ColumnHeaderToolTip="Directories to be traversed to look for duplicate sub-directories.">
@@ -29,12 +41,6 @@
                     </GridView>
                 </ListView.View>
             </ListView>
-            <StatusBar>
-                <StatusBarItem>Directories: </StatusBarItem>
-                <StatusBarItem Content="{Binding Source={StaticResource DirList}, Path=Count}">
-                </StatusBarItem>
-            </StatusBar>
-
-        </StackPanel>
+        </DockPanel>
     </Grid>
 </Window>
