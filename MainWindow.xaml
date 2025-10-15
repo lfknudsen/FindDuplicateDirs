@@ -1,0 +1,40 @@
+﻿<Window x:Class="FindDuplicateDirs.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="MainWindow"
+        Height="320"
+        Width="480"
+        MinWidth="320"
+        MinHeight="480"
+        SizeToContent="WidthAndHeight">
+    <Grid>
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <Button Click="SelectDirs_OnClick" ToolTip="Select directories to traverse.">Add directories</Button>
+                <Button Click="Clear_OnClick" ToolTip="Clear current list of directories.">Clear list</Button>
+                <Button Click="SetInitialDir_OnClick"
+                        ToolTip="Set the initial directory when clicking 'Add directories'.">
+                    Set initial directory
+                </Button>
+            </StackPanel>
+            <!-- <Label Content="{Binding Source={StaticResource DirList}, Path=Count}"></Label> -->
+            <ListView MinWidth="320" ItemsSource="{Binding Source={StaticResource DirList}}">
+                <ListView.View>
+                    <GridView
+                        ColumnHeaderToolTip="Directories to be traversed to look for duplicate sub-directories.">
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Path}" Header="Path" />
+                    </GridView>
+                </ListView.View>
+            </ListView>
+            <StatusBar>
+                <StatusBarItem>Directories: </StatusBarItem>
+                <StatusBarItem Content="{Binding Source={StaticResource DirList}, Path=Count}">
+                </StatusBarItem>
+            </StatusBar>
+
+        </StackPanel>
+    </Grid>
+</Window>
