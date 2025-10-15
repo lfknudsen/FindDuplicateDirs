@@ -15,6 +15,8 @@ public partial class MainWindow : Window, IDisposable {
         InitializeComponent();
         DataContext = this;
         LoadConfig();
+        Title = "Duplicate Directory Finder";
+        DirList = TryFindResource(DirResource) as DirectoryCollection;
     }
 
     /** When the folder find dialogue is opened, this is where it starts. */
@@ -28,9 +30,18 @@ public partial class MainWindow : Window, IDisposable {
     private const string CONFIG_DEFAULT_DIR = "default_dir";
     private const string CONFIG_LAST_DIR_LIST = "last_dir_list";
     private const string DirResource = "DirList";
-    
+
+    private DirectoryCollection? DirList {
+        get {
+            return field ??= TryFindResource(DirResource) as DirectoryCollection;
+        }
+    }
+
+    /** Null = all */
+    private static readonly int? MAX_RECENT_DIRS_TO_SAVE = null;
+
     /** Cached string builder for writing to the config file. */
-    private readonly StringBuilder _sb = new StringBuilder(500);
+    private readonly StringBuilder _sb = new StringBuilder(1000);
 
     private int SelectDirectories() {
         var dialogue = new OpenFolderDialog {
@@ -45,20 +56,19 @@ public partial class MainWindow : Window, IDisposable {
             return 0;
         }
 
-        var collection = (DirectoryCollection?)TryFindResource(DirResource);
-        if (collection == null) {
+        if (DirList == null) {
             return 0;
         }
 
         foreach (string path in dialogue.FolderNames) {
             var entry = new DirectoryEntry(path);
-            collection.Add(entry);
+            DirList.Add(entry);
             Console.WriteLine(entry);
         }
 
         SaveConfig();
 
-        return collection.Count;
+        return DirList.Count;
     }
 
     private void SelectDirs_OnClick(object sender, RoutedEventArgs e) {
@@ -66,8 +76,7 @@ public partial class MainWindow : Window, IDisposable {
     }
 
     private void Clear_OnClick(object sender, RoutedEventArgs e) {
-        var collection = (DirectoryCollection?)TryFindResource(DirResource);
-        collection?.Clear();
+        DirList?.Clear();
         SaveConfig();
     }
 
@@ -84,6 +93,7 @@ public partial class MainWindow : Window, IDisposable {
             _initialDirectory = dialogue.FolderName;
             SaveConfig();
         }
+
         return _initialDirectory;
     }
 
@@ -96,11 +106,17 @@ public partial class MainWindow : Window, IDisposable {
             Directory.CreateDirectory(CONFIG_DIRECTORY);
             return;
         }
+
         if (!File.Exists(CONFIG_FILENAME)) {
             return;
         }
-        
+
         FileStream fs = File.Open(CONFIG_FILENAME, FileMode.Open, FileAccess.Read);
+        if (fs.Length > int.MaxValue) {
+            return;
+        }
+
+        _sb.EnsureCapacity((int)fs.Length);
         BufferedStream bs = new BufferedStream(fs);
         TextReader reader = new StreamReader(bs);
         try {
@@ -115,8 +131,7 @@ public partial class MainWindow : Window, IDisposable {
 
             TomlNode? lastList = config[CONFIG_LAST_DIR_LIST];
             if (lastList is { IsArray : true }) {
-                var collection = (DirectoryCollection?)TryFindResource(DirResource);
-                collection?.AddTomlArray(lastList.AsArray);
+                DirList?.AddTomlArray(lastList.AsArray);
             }
         } catch (TomlParseException _) {
             Console.Error.WriteLine("Failed to load config. Deleting it.");
@@ -137,31 +152,43 @@ public partial class MainWindow : Window, IDisposable {
         if (!Directory.Exists(CONFIG_DIRECTORY)) {
             Directory.CreateDirectory(CONFIG_DIRECTORY);
         }
-        SaveNewConfig();
+
+        try {
+            using FileStream fs = File.Open(CONFIG_FILENAME, FileMode.Create, FileAccess.Write);
+            using var writer = new StreamWriter(fs);
+            WriteInitialDirectory(writer);
+            WriteRecentDirectories(writer);
+        } catch (Exception _) {
+            // Non-fatal. We just move on.
+        }
     }
 
-    private void SaveNewConfig() {
-        _sb.Clear();
-        FileStream f = File.Open(CONFIG_FILENAME, FileMode.Create, FileAccess.Write);
-        var writer = new StreamWriter(f);
+    private void WriteInitialDirectory(StreamWriter writer) {
         if (_initialDirectory != Environment.CurrentDirectory) {
+            _sb.Clear();
             var tomlString = new TomlString {
                 Value = _initialDirectory
             };
             _sb.Append(CONFIG_DEFAULT_DIR)
                 .Append(" = ")
-                .Append(tomlString.ToString());
+                .Append(tomlString.ToInlineToml())
+                .AppendLine();
+            writer.Write(_sb.ToString());
+            writer.Flush();
         }
-        
-        var collection = (DirectoryCollection?)TryFindResource(DirResource);
-        var arr = collection?.ToTomlArray();
-        _sb.Append(CONFIG_LAST_DIR_LIST)
-            .Append(" = ")
-            .Append(arr?.ToString());
-        
-        writer.Write(_sb.ToString());
-        writer.Flush();
-        writer.Close();
+    }
+
+    private void WriteRecentDirectories(StreamWriter writer) {
+        if (DirList != null && DirList.Count > 0) {
+            _sb.Clear();
+            var arr = DirList.ToTomlArray(MAX_RECENT_DIRS_TO_SAVE);
+            _sb.Append(CONFIG_LAST_DIR_LIST)
+                .Append(" = ")
+                .Append(arr.ToInlineToml())
+                .AppendLine();
+            writer.Write(_sb.ToString());
+            writer.Flush();
+        }
     }
 
     private static void ClearConfigFile() {
