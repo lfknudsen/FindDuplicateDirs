@@ -6,35 +6,40 @@
         xml:lang="en-GB"
         mc:Ignorable="d"
         Title="DupDirFinder"
-        Height="320"
+        Height="322"
         Width="480"
-        MinWidth="320"
+        MinWidth="322"
         MinHeight="480"
         Icon="Graphics/Icon.png"
         SizeToContent="WidthAndHeight">
     <Grid>
         <DockPanel LastChildFill="True">
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top">
-                <Button Click="SelectDirs_OnClick" ToolTip="Select directories to traverse."
-                        Margin="2 2 2 0" Padding="3 3 3 3">
+            <DockPanel DockPanel.Dock="Top" LastChildFill="False">
+                <Button DockPanel.Dock="Left" Click="SelectDirs_OnClick" ToolTip="Select directories to traverse."
+                        Margin="2 2 2 0" Padding="6 3 6 3">
                     Add directories
                 </Button>
-                <Button Click="Clear_OnClick" ToolTip="Clear current list of directories."
-                        Margin="2 2 2 0" Padding="3 3 3 3">
+                <Button DockPanel.Dock="Left" Click="Clear_OnClick" ToolTip="Clear current list of directories."
+                        Margin="2 2 2 0" Padding="6 3 6 3">
                     Clear list
                 </Button>
-                <Button Click="SetInitialDir_OnClick"
+                <Button DockPanel.Dock="Left" Click="SetInitialDir_OnClick"
                         ToolTip="Set the initial directory when clicking 'Add directories'."
-                        Margin="2 2 2 0" Padding="3 3 3 3">
+                        Margin="2 2 2 0" Padding="6 3 6 3">
                     Set initial directory
                 </Button>
-            </StackPanel>
+                <Button DockPanel.Dock="Right" Click="Activate_OnClick"
+                        ToolTip="Locate subdirectories which have the same name."
+                        Margin="2 2 2 0" Padding="6 3 6 3">
+                    Start
+                    </Button>
+            </DockPanel>
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>Directories: </StatusBarItem>
                 <StatusBarItem Content="{Binding Source={StaticResource DirList}, Path=Count}">
                 </StatusBarItem>
             </StatusBar>
-            <ListView MinWidth="320" Margin="3 3 3 0" ItemsSource="{Binding Source={StaticResource DirList}}">
+            <ListView MinWidth="320" Margin="2 3 2 0" ItemsSource="{Binding Source={StaticResource DirList}}">
                 <ListView.View>
                     <GridView
                         ColumnHeaderToolTip="Directories to be traversed to look for duplicate sub-directories.">
