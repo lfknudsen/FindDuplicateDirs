@@ -1,5 +1,4 @@
-﻿using System.DirectoryServices;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Windows;
 using Microsoft.Win32;
@@ -29,10 +28,17 @@ public partial class MainWindow : Window, IDisposable {
     private const string CONFIG_DEFAULT_DIR = "default_dir";
     private const string CONFIG_LAST_DIR_LIST = "last_dir_list";
     private const string DirResource = "DirList";
-
+    private const string DupListResource = "DuplicateList";
+    
     private DirectoryCollection? DirList {
         get {
             return field ??= TryFindResource(DirResource) as DirectoryCollection;
+        }
+    }
+
+    private DirectoryPairCollection? DuplicateList {
+        get {
+            return field ??= TryFindResource(DupListResource) as DirectoryPairCollection;
         }
     }
 
@@ -98,6 +104,30 @@ public partial class MainWindow : Window, IDisposable {
 
     private void SetInitialDir_OnClick(object sender, RoutedEventArgs e) {
         SetInitialDirectory();
+    }
+
+    private void Activate_OnClick(object sender, RoutedEventArgs e) {
+        DuplicateList?.Clear();
+        DuplicateList?.Add(DupDirectories());
+    }
+
+    private IEnumerable<Tuple<DirectoryInfo, DirectoryInfo>> DupDirectories() {
+        if (DirList == null || DirList.Count < 2) yield break;
+        
+        var hashes = new HashSet<DirectoryInfo>(DirNameComparer.Instance);
+        int count = DirList.Count;
+        for (int i = 0; i < count; ++i) {
+            IEnumerable<DirectoryInfo> subs = DirList[i].EnumerateDirectories();
+            foreach (DirectoryInfo entry in subs) {
+                DirectoryInfo? existingDirInfo;
+                bool existing = hashes.TryGetValue(entry, out existingDirInfo);
+                if (existing && existingDirInfo != null) {
+                    yield return new Tuple<DirectoryInfo, DirectoryInfo>(existingDirInfo, entry);
+                } else {
+                    hashes.Add(entry);
+                }
+            }
+        }
     }
 
     private void LoadConfig() {
