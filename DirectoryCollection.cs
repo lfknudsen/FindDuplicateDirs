@@ -1,17 +1,16 @@
 ﻿using System.Collections.ObjectModel;
-using System.DirectoryServices;
 using System.IO;
 using Tommy;
 
 namespace FindDuplicateDirs;
 
-public class DirectoryCollection : ObservableCollection<DirectoryEntry> {
+public class DirectoryCollection : ObservableCollection<DirectoryInfo> {
     public void AddTomlArray(TomlArray array) {
         foreach (TomlNode entry in array) {
             if (entry.IsString) {
                 string dirPath = entry.AsString.Value;
                 if (Directory.Exists(dirPath)) {
-                    Add(new DirectoryEntry(dirPath));
+                    Add(new DirectoryInfo(dirPath));
                 }
             }
         }
@@ -25,7 +24,7 @@ public class DirectoryCollection : ObservableCollection<DirectoryEntry> {
 
         for (int i = 0; i < safeLimit; i++) {
             yield return new TomlString {
-                Value = this[i].Path
+                Value = this[i].FullName
             };
         }
     }

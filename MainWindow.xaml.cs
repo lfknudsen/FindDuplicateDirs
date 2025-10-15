@@ -16,7 +16,6 @@ public partial class MainWindow : Window, IDisposable {
         DataContext = this;
         LoadConfig();
         Title = "Duplicate Directory Finder";
-        DirList = TryFindResource(DirResource) as DirectoryCollection;
     }
 
     /** When the folder find dialogue is opened, this is where it starts. */
@@ -61,7 +60,7 @@ public partial class MainWindow : Window, IDisposable {
         }
 
         foreach (string path in dialogue.FolderNames) {
-            var entry = new DirectoryEntry(path);
+            var entry = new DirectoryInfo(path);
             DirList.Add(entry);
             Console.WriteLine(entry);
         }
