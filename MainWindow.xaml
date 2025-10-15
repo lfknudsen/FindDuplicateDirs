@@ -43,7 +43,7 @@
                 <ListView.View>
                     <GridView
                         ColumnHeaderToolTip="Directories to be traversed to look for duplicate sub-directories.">
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=Path}" Header="Path" />
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=FullName}" Header="Path" />
                     </GridView>
                 </ListView.View>
             </ListView>
