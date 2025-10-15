@@ -5,5 +5,6 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <local:DirectoryCollection x:Key="DirList"/>
+        <local:DirectoryPairCollection x:Key="DuplicateList"/>
     </Application.Resources>
 </Application>
