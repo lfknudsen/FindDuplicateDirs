@@ -4,8 +4,8 @@ using System.IO;
 namespace FindDuplicateDirs;
 
 public class FullNameComparer : IEqualityComparer, IEqualityComparer<string>, IEqualityComparer<DirectoryInfo> {
-    private static DirNameComparer? _instance;
-    public static DirNameComparer Instance => _instance ??= new DirNameComparer();
+    private static FullNameComparer? _instance;
+    public static FullNameComparer Instance => _instance ??= new FullNameComparer();
     
     public new bool Equals(object? x, object? y) {
         if (x is string xDir && y is string yDir) {
