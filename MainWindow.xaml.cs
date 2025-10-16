@@ -49,9 +49,6 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
     /** Null = all */
     private static readonly int? MAX_RECENT_DIRS_TO_SAVE = null;
 
-    /** Cached string builder for writing to the config file. */
-    private readonly StringBuilder _sb = new StringBuilder(1000);
-
     private int SelectDirectories() {
         EnsureSubscribed();
         var dialogue = new OpenFolderDialog {
@@ -163,7 +160,6 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
             return;
         }
 
-        _sb.EnsureCapacity((int)fs.Length);
         BufferedStream bs = new BufferedStream(fs);
         TextReader reader = new StreamReader(bs);
         try {
@@ -205,6 +201,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
         try {
             using FileStream fs = File.Open(CONFIG_FILENAME, FileMode.Create, FileAccess.Write);
             using var writer = new StreamWriter(fs);
+            writer.AutoFlush = false;
             WriteInitialDirectory(writer);
             WriteRecentDirectories(writer);
         } catch (Exception _) {
@@ -214,28 +211,22 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
 
     private void WriteInitialDirectory(StreamWriter writer) {
         if (_initialDirectory != Environment.CurrentDirectory) {
-            _sb.Clear();
             var tomlString = new TomlString {
                 Value = _initialDirectory
             };
-            _sb.Append(CONFIG_DEFAULT_DIR)
-                .Append(" = ")
-                .Append(tomlString.ToInlineToml())
-                .AppendLine();
-            writer.Write(_sb.ToString());
+            writer.Write(CONFIG_DEFAULT_DIR);
+            writer.Write(" = ");
+            writer.WriteLine(tomlString.ToInlineToml());
             writer.Flush();
         }
     }
 
     private void WriteRecentDirectories(StreamWriter writer) {
         if (DirList != null && DirList.Count > 0) {
-            _sb.Clear();
             var arr = DirList.ToTomlArray(MAX_RECENT_DIRS_TO_SAVE);
-            _sb.Append(CONFIG_LAST_DIR_LIST)
-                .Append(" = ")
-                .Append(arr.ToInlineToml())
-                .AppendLine();
-            writer.Write(_sb.ToString());
+            writer.Write(CONFIG_LAST_DIR_LIST);
+            writer.Write(" = ");
+            writer.WriteLine(arr.ToInlineToml());
             writer.Flush();
         }
     }
