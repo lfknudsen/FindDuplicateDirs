@@ -1,25 +1,47 @@
 ﻿using System.Collections.ObjectModel;
 using System.IO;
-using System.Windows.Input;
 using Tommy;
 
 namespace FindDuplicateDirs;
 
-public class DirectoryCollection : ObservableCollection<DirectoryInfo>, ICommand {
+public class DirectoryCollection :
+    ObservableCollection<DirectoryInfo>,
+    IObservable<DirectoryCollection>,
+    IDisposable {
+    public bool AtLeastTwoElements => Count > 2;
+
+    private readonly List<IObserver<DirectoryCollection>> _listeners = [];
+
     public new void Add(DirectoryInfo item) {
         if (!Contains(item)) {
             base.Add(item);
+            NotifySubscribers();
+            if (MainWindow.VERBOSE) Console.WriteLine("+ " + item.FullName);
         }
     }
 
-    public new bool Contains(DirectoryInfo item) {
-        return this.Any(dir => dir.FullName == item.FullName);
+    public void Add(IEnumerable<DirectoryInfo> items) {
+        foreach (DirectoryInfo item in items) {
+            Add(item);
+        }
+    }
+
+    public void Add(TomlArray array) {
+        foreach (TomlNode entry in array) {
+            if (!entry.IsString) continue;
+
+            string dirPath = entry.AsString.Value;
+            if (Directory.Exists(dirPath)) {
+                Add(new DirectoryInfo(dirPath));
+            }
+        }
     }
 
     public void Remove(string path) {
         foreach (DirectoryInfo dir in this) {
-            if (dir.FullName == path) {
-                base.Remove(dir);
+            if (dir.FullName == path && base.Remove(dir)) {
+                NotifySubscribers();
+                if (MainWindow.VERBOSE) Console.WriteLine("- " + dir.FullName);
                 return;
             }
         }
@@ -33,32 +55,25 @@ public class DirectoryCollection : ObservableCollection<DirectoryInfo>, ICommand
         return this.Any(dir => dir.FullName == path);
     }
 
-    public void Add(IEnumerable<DirectoryInfo> items) {
-        foreach (DirectoryInfo item in items) {
-            Add(item);
-        }
+    public new bool Contains(DirectoryInfo item) {
+        return Contains(item.FullName);
     }
 
     public void RemoveDuplicates() {
         HashSet<DirectoryInfo> set = this.ToHashSet(FullNameComparer.Instance);
+        if (MainWindow.VERBOSE) Console.WriteLine("Cleared directory list.");
         Clear();
         Add(set);
+        NotifySubscribers();
     }
     
-    public void AddTomlArray(TomlArray array) {
-        foreach (TomlNode entry in array) {
-            if (entry.IsString) {
-                string dirPath = entry.AsString.Value;
-                if (Directory.Exists(dirPath)) {
-                    Add(new DirectoryInfo(dirPath));
-                }
-            }
-        }
-    }
+    //==========================================================================
+    // TOML writing
+    //==========================================================================
 
-    public IEnumerable<TomlString> AsTomlEnumerable(int? limit = null) {
+    private IEnumerable<TomlString> ToTomlEnumerable(int? limit = null) {
         int safeLimit = Count;
-        if (limit != null && limit >= 0 && limit < Count) {
+        if (limit >= 0 && limit < Count) {
             safeLimit = limit.Value;
         }
 
@@ -71,18 +86,44 @@ public class DirectoryCollection : ObservableCollection<DirectoryInfo>, ICommand
 
     public TomlArray ToTomlArray(int? limit = null) {
         var arr = new TomlArray();
-        arr.AddRange(AsTomlEnumerable(limit));
+        arr.AddRange(ToTomlEnumerable(limit));
         return arr;
     }
+    
+    //==========================================================================
+    // Event Handling
+    //==========================================================================
 
-    public bool CanExecute(object? parameter) {
-        return parameter is DirectoryInfo;
+    public IDisposable Subscribe(IObserver<DirectoryCollection> observer) {
+        _listeners.Add(observer);
+        return new Unsubscriber(this, observer);
     }
 
-    public void Execute(object? parameter) {
-        Console.WriteLine("Entered execution of command?!");
-        Remove(parameter as DirectoryInfo ?? throw new InvalidOperationException());
+    private void Unsubscribe(IObserver<DirectoryCollection> observer) {
+        _listeners.Remove(observer);
     }
 
-    public event EventHandler? CanExecuteChanged;
+    private void NotifySubscribers() {
+        _listeners.ForEach(observer => observer.OnNext(this));
+    }
+
+    private void CloseSubscriptions() {
+        _listeners.ForEach(observer => observer.OnCompleted());
+    }
+
+    private class Unsubscriber(DirectoryCollection observable, IObserver<DirectoryCollection> observer)
+        : IDisposable {
+        DirectoryCollection _observable = observable;
+        IObserver<DirectoryCollection> _observer = observer;
+
+        public void Dispose() {
+            _observable.Unsubscribe(_observer);
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    public void Dispose() {
+        CloseSubscriptions();
+        GC.SuppressFinalize(this);
+    }
 }
