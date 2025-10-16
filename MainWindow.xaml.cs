@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
 using Microsoft.Win32;
 using Tommy;
 
@@ -29,17 +30,13 @@ public partial class MainWindow : Window, IDisposable {
     private const string CONFIG_LAST_DIR_LIST = "last_dir_list";
     private const string DirResource = "DirList";
     private const string DupListResource = "DuplicateList";
-    
+
     private DirectoryCollection? DirList {
-        get {
-            return field ??= TryFindResource(DirResource) as DirectoryCollection;
-        }
+        get { return field ??= TryFindResource(DirResource) as DirectoryCollection; }
     }
 
     private DirectoryPairCollection? DuplicateList {
-        get {
-            return field ??= TryFindResource(DupListResource) as DirectoryPairCollection;
-        }
+        get { return field ??= TryFindResource(DupListResource) as DirectoryPairCollection; }
     }
 
     /** Null = all */
@@ -58,6 +55,7 @@ public partial class MainWindow : Window, IDisposable {
         };
         bool? pressedOK = dialogue.ShowDialog();
         if (!pressedOK.HasValue || !pressedOK.Value) {
+            DirList?.RemoveDuplicates();
             return 0;
         }
 
@@ -113,7 +111,7 @@ public partial class MainWindow : Window, IDisposable {
 
     private IEnumerable<Tuple<DirectoryInfo, DirectoryInfo>> DupDirectories() {
         if (DirList == null || DirList.Count < 2) yield break;
-        
+
         var hashes = new HashSet<DirectoryInfo>(DirNameComparer.Instance);
         int count = DirList.Count;
         for (int i = 0; i < count; ++i) {
@@ -223,6 +221,17 @@ public partial class MainWindow : Window, IDisposable {
     private static void ClearConfigFile() {
         if (File.Exists(CONFIG_FILENAME)) {
             File.Delete(CONFIG_FILENAME);
+        }
+    }
+
+    private void DirItem_OnRightClick(object sender, RoutedEventArgs e) {
+        var item = e.Source as MenuItem;
+        var context = item?.Parent as ContextMenu;
+        var placement = context?.PlacementTarget as ListViewItem;
+        var targetString = placement?.Content.ToString();
+        if (targetString != null) {
+            DirList?.Remove(targetString);
+            SaveConfig();
         }
     }
 }
