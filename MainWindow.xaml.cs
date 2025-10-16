@@ -306,7 +306,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
         var context = item?.Parent as ContextMenu;
         var placement = context?.PlacementTarget as ListViewItem;
         if (placement?.Content is DirectoryInfo target) {
-            DirList?.Remove(target);
+            DirList?.TryRemoveDirect(target);
             SaveConfig();
         }
     }

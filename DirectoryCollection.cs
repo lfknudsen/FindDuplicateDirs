@@ -4,12 +4,15 @@ using Tommy;
 
 namespace FindDuplicateDirs;
 
-public class DirectoryCollection :
-    ObservableCollection<DirectoryInfo>,
-    IObservable<DirectoryCollection>,
-    IDisposable {
-    public bool AtLeastTwoElements => Count > 2;
-
+/** Set of DirectoryInfo elements. Elements are compared via
+ * <see cref="DirectoryInfo.FullName"/>
+ * rather than reference.<br/>
+ * Has a couple of convenience methods for outputting in TOML format.<br/>
+ * When elements are added/removed, the instances in <see cref="_listeners"/> are
+ * notified. */
+public class DirectoryCollection : ObservableCollection<DirectoryInfo>,
+                                   IObservable<DirectoryCollection>,
+                                   IDisposable {
     private readonly List<IObserver<DirectoryCollection>> _listeners = [];
 
     public new void Add(DirectoryInfo item) {
@@ -37,18 +40,62 @@ public class DirectoryCollection :
         }
     }
 
-    public void Remove(string path) {
+    public bool Remove(string path) {
         foreach (DirectoryInfo dir in this) {
             if (dir.FullName == path && base.Remove(dir)) {
                 NotifySubscribers();
                 if (MainWindow.VERBOSE) Console.WriteLine("- " + dir.FullName);
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 
-    public new void Remove(DirectoryInfo target) {
-        Remove(target.FullName);
+    public bool RemoveAll(string path) {
+        var changed = false;
+        foreach (DirectoryInfo dir in this) {
+            if (dir.FullName == path) {
+                changed |= base.Remove(dir);
+                if (MainWindow.VERBOSE) Console.WriteLine("- " + dir.FullName);
+            }
+        }
+
+        if (changed) {
+            NotifySubscribers();
+        }
+        return changed;
+    }
+
+    public new bool Remove(DirectoryInfo target) {
+        return Remove(target.FullName);
+    }
+
+    public bool RemoveAll(DirectoryInfo target) {
+        return RemoveAll(target.FullName);
+    }
+
+    /** Attempts to remove the specific DirectoryInfo instance.
+     * Used when right-clicking a <see cref="System.Windows.Controls.ListViewItem">
+     * list view element</see> to try to delete that particular element instead of
+     * simply the first one that had an identical path. */
+    public bool TryRemoveDirect(DirectoryInfo target) {
+        if (base.Remove(target)) {
+            NotifySubscribers();
+            return true;
+        }
+
+        return Remove(target.FullName);
+    }
+
+    public bool RemoveDuplicates() {
+        HashSet<DirectoryInfo> set = this.ToHashSet(FullNameComparer.Instance);
+        bool changed = set.Count < Count;
+        if (MainWindow.VERBOSE) Console.WriteLine("Cleared directory list.");
+        Clear();
+        Add(set);
+        NotifySubscribers();
+        return changed;
     }
 
     public bool Contains(string path) {
@@ -59,14 +106,22 @@ public class DirectoryCollection :
         return Contains(item.FullName);
     }
 
-    public void RemoveDuplicates() {
-        HashSet<DirectoryInfo> set = this.ToHashSet(FullNameComparer.Instance);
-        if (MainWindow.VERBOSE) Console.WriteLine("Cleared directory list.");
-        Clear();
-        Add(set);
-        NotifySubscribers();
+    public bool ContainsAll(string[] paths) {
+        return paths.All(Contains);
     }
-    
+
+    public bool ContainsAll(IEnumerable<string> paths) {
+        return paths.All(Contains);
+    }
+
+    public bool ContainsAll(DirectoryInfo[] items) {
+        return items.All(e => Contains(e.FullName));
+    }
+
+    public bool ContainsAll(IEnumerable<DirectoryInfo> items) {
+        return items.All(e => Contains(e.FullName));
+    }
+
     //==========================================================================
     // TOML writing
     //==========================================================================
@@ -89,7 +144,7 @@ public class DirectoryCollection :
         arr.AddRange(ToTomlEnumerable(limit));
         return arr;
     }
-    
+
     //==========================================================================
     // Event Handling
     //==========================================================================
@@ -111,10 +166,10 @@ public class DirectoryCollection :
         _listeners.ForEach(observer => observer.OnCompleted());
     }
 
-    private class Unsubscriber(DirectoryCollection observable, IObserver<DirectoryCollection> observer)
-        : IDisposable {
-        DirectoryCollection _observable = observable;
-        IObserver<DirectoryCollection> _observer = observer;
+    private class Unsubscriber(DirectoryCollection observable,
+                               IObserver<DirectoryCollection> observer) : IDisposable {
+        private readonly DirectoryCollection            _observable = observable;
+        private readonly IObserver<DirectoryCollection> _observer   = observer;
 
         public void Dispose() {
             _observable.Unsubscribe(_observer);
