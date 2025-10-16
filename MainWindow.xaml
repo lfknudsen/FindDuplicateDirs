@@ -37,7 +37,17 @@
                 <StatusBarItem Content="{Binding Source={StaticResource DirList}, Path=Count}">
                 </StatusBarItem>
             </StatusBar>
-            <ListView MinWidth="320" Margin="2 3 2 0" ItemsSource="{Binding Source={StaticResource DirList}}">
+            <ListView Margin="2 3 2 0" ItemsSource="{Binding Source={StaticResource DirList}}">
+                <ListView.Resources>
+                    <ContextMenu x:Key="DirectoryContextMenu">
+                        <MenuItem Header="Remove" Click="DirItem_OnRightClick" />
+                    </ContextMenu>
+                </ListView.Resources>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListViewItem}">
+                        <Setter Property="ContextMenu" Value="{StaticResource DirectoryContextMenu}" />
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView
                         ColumnHeaderToolTip="Directories to be traversed to look for duplicate sub-directories.">
