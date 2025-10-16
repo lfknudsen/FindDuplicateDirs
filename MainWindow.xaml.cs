@@ -106,11 +106,12 @@ public partial class MainWindow : Window, IDisposable {
 
     private void Activate_OnClick(object sender, RoutedEventArgs e) {
         DuplicateList?.Clear();
+        DirList?.RemoveDuplicates();
         DuplicateList?.Add(DupDirectories());
     }
 
     private IEnumerable<Tuple<DirectoryInfo, DirectoryInfo>> DupDirectories() {
-        if (DirList == null || DirList.Count < 2) yield break;
+        if (DirList == null || DirList.Count < 2 || DuplicateList == null) yield break;
 
         var hashes = new HashSet<DirectoryInfo>(DirNameComparer.Instance);
         int count = DirList.Count;
@@ -228,10 +229,18 @@ public partial class MainWindow : Window, IDisposable {
         var item = e.Source as MenuItem;
         var context = item?.Parent as ContextMenu;
         var placement = context?.PlacementTarget as ListViewItem;
-        var targetString = placement?.Content.ToString();
-        if (targetString != null) {
-            DirList?.Remove(targetString);
+        if (placement?.Content is DirectoryInfo target) {
+            DirList?.Remove(target);
             SaveConfig();
+        }
+    }
+
+    private void DupItem_OnRightClick(object sender, RoutedEventArgs e) {
+        var item = e.Source as MenuItem;
+        var context = item?.Parent as ContextMenu;
+        var placement = context?.PlacementTarget as ListViewItem;
+        if (placement?.Content is Tuple<DirectoryInfo, DirectoryInfo> target) {
+            DuplicateList?.Remove(target);
         }
     }
 }
