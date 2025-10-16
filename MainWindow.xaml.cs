@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,13 +11,19 @@ namespace FindDuplicateDirs;
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window, IDisposable {
+public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollection> {
     public MainWindow() {
         InitializeComponent();
         DataContext = this;
         LoadConfig();
         Title = "Duplicate Directory Finder";
+        EnsureSubscribed();
+        SetBtnStartState(DirList);
     }
+
+    private bool _subscribed = false;
+
+    public const bool VERBOSE = true;
 
     /** When the folder find dialogue is opened, this is where it starts. */
     private string _initialDirectory = Environment.CurrentDirectory;
@@ -46,6 +53,7 @@ public partial class MainWindow : Window, IDisposable {
     private readonly StringBuilder _sb = new StringBuilder(1000);
 
     private int SelectDirectories() {
+        EnsureSubscribed();
         var dialogue = new OpenFolderDialog {
             Multiselect = true,
             ShowHiddenItems = true,
@@ -63,10 +71,10 @@ public partial class MainWindow : Window, IDisposable {
             return 0;
         }
 
+        DirList.Add(dialogue.FolderNames.Select(n => new DirectoryInfo(n)));
         foreach (string path in dialogue.FolderNames) {
             var entry = new DirectoryInfo(path);
             DirList.Add(entry);
-            Console.WriteLine(entry);
         }
 
         SaveConfig();
@@ -79,6 +87,7 @@ public partial class MainWindow : Window, IDisposable {
     }
 
     private void Clear_OnClick(object sender, RoutedEventArgs e) {
+        EnsureSubscribed();
         DirList?.Clear();
         SaveConfig();
     }
@@ -105,12 +114,20 @@ public partial class MainWindow : Window, IDisposable {
     }
 
     private void Activate_OnClick(object sender, RoutedEventArgs e) {
+        EnsureSubscribed();
+        if (DirList is null || DirList.Count < 2) {
+            if (VERBOSE)
+                Console.WriteLine("Directory list null or consists of fewer than 2 elements.");
+            return;
+        }
+
         DuplicateList?.Clear();
         DirList?.RemoveDuplicates();
         DuplicateList?.Add(DupDirectories());
     }
 
     private IEnumerable<Tuple<DirectoryInfo, DirectoryInfo>> DupDirectories() {
+        EnsureSubscribed();
         if (DirList == null || DirList.Count < 2 || DuplicateList == null) yield break;
 
         var hashes = new HashSet<DirectoryInfo>(DirNameComparer.Instance);
@@ -130,6 +147,8 @@ public partial class MainWindow : Window, IDisposable {
     }
 
     private void LoadConfig() {
+        EnsureSubscribed();
+        
         if (!Directory.Exists(CONFIG_DIRECTORY)) {
             Directory.CreateDirectory(CONFIG_DIRECTORY);
             return;
@@ -159,7 +178,7 @@ public partial class MainWindow : Window, IDisposable {
 
             TomlNode? lastList = config[CONFIG_LAST_DIR_LIST];
             if (lastList is { IsArray : true }) {
-                DirList?.AddTomlArray(lastList.AsArray);
+                DirList?.Add(lastList.AsArray);
             }
         } catch (TomlParseException _) {
             Console.Error.WriteLine("Failed to load config. Deleting it.");
@@ -177,6 +196,8 @@ public partial class MainWindow : Window, IDisposable {
     }
 
     private void SaveConfig() {
+        EnsureSubscribed();
+        
         if (!Directory.Exists(CONFIG_DIRECTORY)) {
             Directory.CreateDirectory(CONFIG_DIRECTORY);
         }
@@ -226,6 +247,7 @@ public partial class MainWindow : Window, IDisposable {
     }
 
     private void DirItem_OnRightClick(object sender, RoutedEventArgs e) {
+        EnsureSubscribed();
         var item = e.Source as MenuItem;
         var context = item?.Parent as ContextMenu;
         var placement = context?.PlacementTarget as ListViewItem;
@@ -236,11 +258,43 @@ public partial class MainWindow : Window, IDisposable {
     }
 
     private void DupItem_OnRightClick(object sender, RoutedEventArgs e) {
+        EnsureSubscribed();
         var item = e.Source as MenuItem;
         var context = item?.Parent as ContextMenu;
         var placement = context?.PlacementTarget as ListViewItem;
         if (placement?.Content is Tuple<DirectoryInfo, DirectoryInfo> target) {
             DuplicateList?.Remove(target);
+        }
+    }
+
+    /** If this instance isn't subscribed to DirList, attempt to subscribe. */
+    private void EnsureSubscribed() {
+        if (!_subscribed) {
+            _subscribed = DirList?.Subscribe(this) != null;
+        }
+    }
+
+    public void OnCompleted() {
+        // Irrelevant
+    }
+
+    public void OnError(Exception error) {
+        // Irrelevant
+    }
+
+    /** When the DirList is modified, this function is called.
+     Disables the activation button if the number of elements in
+     the DirectoryCollection is less than 2, and vice versa. */
+    public void OnNext(DirectoryCollection value) {
+        SetBtnStartState(value);
+    }
+    
+    [SuppressMessage("Performance", "CA1822:Mark members as static")] // Incorrect. BtnStart is non-static.
+    private void SetBtnStartState(DirectoryCollection? value) {
+        if (value == null) {
+            BtnStart.IsEnabled = false;
+        } else {
+            BtnStart.IsEnabled = value.Count >= 2;
         }
     }
 }

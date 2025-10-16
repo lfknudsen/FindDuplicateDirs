@@ -28,9 +28,8 @@
                 </Button>
                 <Button MinWidth="38px" DockPanel.Dock="Right" Click="Activate_OnClick"
                         ToolTip="Locate subdirectories which have the same name."
-                        Margin="2 2 2 0" Padding="6 3 6 3">
-                    Start
-                </Button>
+                        Margin="2 2 2 0" Padding="6 3 6 3" Content="Start"
+                        x:Name="BtnStart"/>
             </DockPanel>
             <StatusBar DockPanel.Dock="Bottom">
                 <DockPanel LastChildFill="True">
@@ -62,6 +61,7 @@
                     </GridView>
                 </ListView.View>
             </ListView>
+            <Border />
             <ListView DockPanel.Dock="Right" Margin="2 3 2 0"
                       ItemsSource="{Binding Source={StaticResource DuplicateList}}">
                 <ListView.Resources>
