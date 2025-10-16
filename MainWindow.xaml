@@ -6,9 +6,7 @@
         xml:lang="en-GB"
         mc:Ignorable="d"
         Title="DupDirFinder"
-        Height="322"
-        Width="480"
-        MinWidth="322"
+        MinWidth="348"
         MinHeight="480"
         Icon="Graphics/Icon.png"
         SizeToContent="WidthAndHeight">
@@ -28,11 +26,11 @@
                         Margin="2 2 2 0" Padding="6 3 6 3">
                     Set initial directory
                 </Button>
-                <Button DockPanel.Dock="Right" Click="Activate_OnClick"
+                <Button MinWidth="38px" DockPanel.Dock="Right" Click="Activate_OnClick"
                         ToolTip="Locate subdirectories which have the same name."
                         Margin="2 2 2 0" Padding="6 3 6 3">
                     Start
-                    </Button>
+                </Button>
             </DockPanel>
             <StatusBar DockPanel.Dock="Bottom">
                 <StatusBarItem>Directories: </StatusBarItem>
