@@ -40,11 +40,11 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
     private const string CONFIG_DEFAULT_DIR = "default_dir";
     /** TOML key for the array of most recent input directories. */
     private const string CONFIG_LAST_DIR_LIST = "last_dir_list";
-    
+
     /** String which identifies the <see cref="StaticResourceExtension">static resource</see>
      * <see cref="DirectoryCollection"/>.*/
     private const string DirResource = "DirList";
-    
+
     /** String which identifies the <see cref="StaticResourceExtension">static resource</see>
      * <see cref="DirectoryPairCollection"/>.*/
     private const string DupListResource = "DuplicateList";
@@ -164,7 +164,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
      * <see cref="DirectoryInfo.EnumerateDirectories()">immediate children</see> of
      * the directories in the <see cref="DirList"/>.
      */
-    private IEnumerable<Tuple<DirectoryInfo, DirectoryInfo>> FindDupDirectories() {
+    private IEnumerable<Tuple<DirView, DirView>> FindDupDirectories() {
         if (DirList == null || DirList.Count < 2 || DuplicateList == null) yield break;
 
         var hashes = new HashSet<DirectoryInfo>(DirNameComparer.Instance);
@@ -175,7 +175,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
                 DirectoryInfo? existingDirInfo;
                 bool existing = hashes.TryGetValue(entry, out existingDirInfo);
                 if (existing && existingDirInfo != null) {
-                    yield return new Tuple<DirectoryInfo, DirectoryInfo>(existingDirInfo, entry);
+                    yield return new Tuple<DirView, DirView>(new DirView(existingDirInfo), new DirView(entry));
                 } else {
                     hashes.Add(entry);
                 }
@@ -276,8 +276,8 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
             writer.Flush();
         }
     }
-    
-    /** Writes the absolute paths of the current contents of the 
+
+    /** Writes the absolute paths of the current contents of the
     <see cref="DirList"/> to the config file as an <see cref="TomlArray">array</see>. */
     private void WriteRecentDirectories(StreamWriter writer) {
         if (DirList != null && DirList.Count > 0) {
@@ -319,7 +319,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
         var item = e.Source as MenuItem;
         var context = item?.Parent as ContextMenu;
         var placement = context?.PlacementTarget as ListViewItem;
-        if (placement?.Content is Tuple<DirectoryInfo, DirectoryInfo> target) {
+        if (placement?.Content is Tuple<DirView, DirView> target) {
             DuplicateList?.Remove(target);
         }
     }
@@ -346,7 +346,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
     public void OnNext(DirectoryCollection value) {
         SetBtnStartState(value);
     }
-    
+
     /** Sets the <c>IsEnabled</c> flag of the button which starts the duplication-finding process.
      * If the input <see cref="DirectoryCollection"/> is null or has fewer than 2 elements in it, then
      * the button is disabled. Otherwise, it is enabled. */
