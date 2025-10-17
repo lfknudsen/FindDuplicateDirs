@@ -26,7 +26,7 @@ public class DirView {
             return;
         Size = _dir.EnumerateFiles()
                    .Aggregate<FileInfo, long>(0, Acc<FileInfo>)
-               + _dir.EnumerateDirectories()
+             + _dir.EnumerateDirectories()
                    .Aggregate<DirectoryInfo, long>(0, Acc<DirectoryInfo>);
         DirSize = Size.ToString();
     }

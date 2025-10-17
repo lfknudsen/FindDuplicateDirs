@@ -13,11 +13,13 @@
     <Grid>
         <DockPanel LastChildFill="True">
             <DockPanel DockPanel.Dock="Top" LastChildFill="False">
-                <Button DockPanel.Dock="Left" Click="SelectDirs_OnClick" ToolTip="Select directories to traverse."
+                <Button DockPanel.Dock="Left" Click="SelectDirs_OnClick"
+                        ToolTip="Select directories to traverse."
                         Margin="2 2 2 0" Padding="6 3 6 3">
                     Add directories
                 </Button>
-                <Button DockPanel.Dock="Left" Click="Clear_OnClick" ToolTip="Clear current list of directories."
+                <Button DockPanel.Dock="Left" Click="Clear_OnClick"
+                        ToolTip="Clear current list of directories."
                         Margin="2 2 2 0" Padding="6 3 6 3">
                     Clear list
                 </Button>
@@ -35,53 +37,63 @@
                 <DockPanel LastChildFill="True">
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
                         <StatusBarItem>Directories: </StatusBarItem>
-                        <StatusBarItem Content="{Binding Source={StaticResource DirList}, Path=Count}" />
+                        <StatusBarItem
+                            Content="{Binding Source={StaticResource DirList}, Path=Count}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <StatusBarItem>Duplicate Pairs: </StatusBarItem>
-                        <StatusBarItem Content="{Binding Source={StaticResource DuplicateList}, Path=Count}" />
+                        <StatusBarItem
+                            Content="{Binding Source={StaticResource DuplicateList}, Path=Count}"/>
                     </StackPanel>
                 </DockPanel>
             </StatusBar>
-            <ListView DockPanel.Dock="Left" Margin="2 3 2 0" ItemsSource="{Binding Source={StaticResource DirList}}">
+            <ListView DockPanel.Dock="Left" Margin="2 3 2 0"
+                      ItemsSource="{Binding Source={StaticResource DirList}}">
                 <ListView.Resources>
                     <ContextMenu x:Key="DirectoryContextMenu">
-                        <MenuItem Header="Remove" Click="DirItem_OnRightClick" />
+                        <MenuItem Header="Remove" Click="DirItem_OnRightClick"/>
                     </ContextMenu>
                 </ListView.Resources>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
-                        <Setter Property="ContextMenu" Value="{StaticResource DirectoryContextMenu}" />
+                        <Setter Property="ContextMenu"
+                                Value="{StaticResource DirectoryContextMenu}"/>
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView
-                        ColumnHeaderToolTip="The top-level directories wherein the programme will look for
-                        child directories with identical names.">
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=FullName}" Header="Path" />
+                        ColumnHeaderToolTip="The top-level directories wherein the programme
+                        will look for child directories with identical names.">
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=FullName}"
+                                        Header="Path"/>
                     </GridView>
                 </ListView.View>
             </ListView>
-            <Border />
+            <Border/>
             <ListView DockPanel.Dock="Right" Margin="2 3 2 0"
                       ItemsSource="{Binding Source={StaticResource DuplicateList}}">
                 <ListView.Resources>
                     <ContextMenu x:Key="DirectoryContextMenu">
-                        <MenuItem Header="Remove" Click="DupItem_OnRightClick" />
+                        <MenuItem Header="Remove" Click="DupItem_OnRightClick"/>
                     </ContextMenu>
                 </ListView.Resources>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="{x:Type ListViewItem}">
-                        <Setter Property="ContextMenu" Value="{StaticResource DirectoryContextMenu}" />
+                        <Setter Property="ContextMenu"
+                                Value="{StaticResource DirectoryContextMenu}"/>
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView
                         ColumnHeaderToolTip="Identically-named sub-directory pairs.">
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item1.FullName}" Header="Path 1" />
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item1.DirSize}" Header="Size 1" />
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item2.FullName}" Header="Path 2" />
-                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item2.DirSize}" Header="Size 2" />
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item1.FullName}"
+                                        Header="Path 1"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item1.DirSize}"
+                                        Header="Size 1"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item2.FullName}"
+                                        Header="Path 2"/>
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item2.DirSize}"
+                                        Header="Size 2"/>
                     </GridView>
                 </ListView.View>
             </ListView>

@@ -70,6 +70,7 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
                 changed |= base.Remove(dirs);
             }
         }
+
         return changed;
     }
 
@@ -80,6 +81,7 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
                 changed |= base.Remove(dirs);
             }
         }
+
         return changed;
     }
 
@@ -91,8 +93,9 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
         bool changed = false;
         foreach (Tuple<DirectoryInfo, DirectoryInfo> item in items) {
             changed |= Add(new Tuple<DirView, DirView>(
-                           new DirView(item.Item1), new DirView(item.Item2)));
+                               new DirView(item.Item1), new DirView(item.Item2)));
         }
+
         return changed;
     }
 

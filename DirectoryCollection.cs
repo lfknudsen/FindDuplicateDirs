@@ -64,6 +64,7 @@ public class DirectoryCollection : ObservableCollection<DirectoryInfo>,
         if (changed) {
             NotifySubscribers();
         }
+
         return changed;
     }
 
@@ -168,8 +169,8 @@ public class DirectoryCollection : ObservableCollection<DirectoryInfo>,
 
     private class Unsubscriber(DirectoryCollection observable,
                                IObserver<DirectoryCollection> observer) : IDisposable {
-        private readonly DirectoryCollection            _observable = observable;
-        private readonly IObserver<DirectoryCollection> _observer   = observer;
+        private readonly DirectoryCollection _observable = observable;
+        private readonly IObserver<DirectoryCollection> _observer = observer;
 
         public void Dispose() {
             _observable.Unsubscribe(_observer);

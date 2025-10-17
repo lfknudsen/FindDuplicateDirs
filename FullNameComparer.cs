@@ -3,10 +3,9 @@ using System.IO;
 
 namespace FindDuplicateDirs;
 
-public class FullNameComparer :
-        IEqualityComparer,
-        IEqualityComparer<string>,
-        IEqualityComparer<DirectoryInfo> {
+public class FullNameComparer : IEqualityComparer,
+                                IEqualityComparer<string>,
+                                IEqualityComparer<DirectoryInfo> {
     private static FullNameComparer? _instance;
     public static FullNameComparer Instance => _instance ??= new FullNameComparer();
 
@@ -14,6 +13,7 @@ public class FullNameComparer :
         if (x is string xDir && y is string yDir) {
             return Path.GetFullPath(xDir) == Path.GetFullPath(yDir);
         }
+
         return false;
     }
 

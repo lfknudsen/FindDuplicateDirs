@@ -38,6 +38,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
 
     /** TOML key for the default folder chooser directory. */
     private const string CONFIG_DEFAULT_DIR = "default_dir";
+
     /** TOML key for the array of most recent input directories. */
     private const string CONFIG_LAST_DIR_LIST = "last_dir_list";
 
@@ -175,7 +176,8 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
                 DirectoryInfo? existingDirInfo;
                 bool existing = hashes.TryGetValue(entry, out existingDirInfo);
                 if (existing && existingDirInfo != null) {
-                    yield return new Tuple<DirView, DirView>(new DirView(existingDirInfo), new DirView(entry));
+                    yield return new Tuple<DirView, DirView>(
+                        new DirView(existingDirInfo), new DirView(entry));
                 } else {
                     hashes.Add(entry);
                 }
@@ -350,7 +352,8 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
     /** Sets the <c>IsEnabled</c> flag of the button which starts the duplication-finding process.
      * If the input <see cref="DirectoryCollection"/> is null or has fewer than 2 elements in it, then
      * the button is disabled. Otherwise, it is enabled. */
-    [SuppressMessage("Performance", "CA1822:Mark members as static")] // Incorrect. BtnStart is non-static.
+    [SuppressMessage("Performance",
+                     "CA1822:Mark members as static")] // Incorrect. BtnStart is non-static.
     private void SetBtnStartState(DirectoryCollection? value) {
         if (value == null) {
             BtnStart.IsEnabled = false;

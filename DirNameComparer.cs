@@ -3,7 +3,8 @@ using System.IO;
 
 namespace FindDuplicateDirs;
 
-public class DirNameComparer : IEqualityComparer, IEqualityComparer<string>, IEqualityComparer<DirectoryInfo> {
+public class DirNameComparer : IEqualityComparer, IEqualityComparer<string>,
+                               IEqualityComparer<DirectoryInfo> {
     private static DirNameComparer? _instance;
     public static DirNameComparer Instance => _instance ??= new DirNameComparer();
 
@@ -11,6 +12,7 @@ public class DirNameComparer : IEqualityComparer, IEqualityComparer<string>, IEq
         if (x is string xDir && y is string yDir) {
             return Path.GetFileName(xDir) == Path.GetFileName(yDir);
         }
+
         return false;
     }
 
