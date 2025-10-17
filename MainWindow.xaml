@@ -56,7 +56,8 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView
-                        ColumnHeaderToolTip="Directories to be traversed to look for duplicate sub-directories.">
+                        ColumnHeaderToolTip="The top-level directories wherein the programme will look for
+                        child directories with identical names.">
                         <GridViewColumn DisplayMemberBinding="{Binding Path=FullName}" Header="Path" />
                     </GridView>
                 </ListView.View>

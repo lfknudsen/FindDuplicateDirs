@@ -3,10 +3,13 @@ using System.IO;
 
 namespace FindDuplicateDirs;
 
-public class FullNameComparer : IEqualityComparer, IEqualityComparer<string>, IEqualityComparer<DirectoryInfo> {
+public class FullNameComparer :
+        IEqualityComparer,
+        IEqualityComparer<string>,
+        IEqualityComparer<DirectoryInfo> {
     private static FullNameComparer? _instance;
     public static FullNameComparer Instance => _instance ??= new FullNameComparer();
-    
+
     public new bool Equals(object? x, object? y) {
         if (x is string xDir && y is string yDir) {
             return Path.GetFullPath(xDir) == Path.GetFullPath(yDir);
@@ -15,14 +18,11 @@ public class FullNameComparer : IEqualityComparer, IEqualityComparer<string>, IE
     }
 
     int IEqualityComparer.GetHashCode(object obj) {
-        switch (obj) {
-            case string stringObj:
-                return Path.GetFullPath(stringObj).GetHashCode();
-            case DirectoryInfo dir:
-                return dir.FullName.GetHashCode();
-            default:
-                return obj.GetHashCode();
-        }
+        return obj switch {
+            string stringObj  => Path.GetFullPath(stringObj).GetHashCode(),
+            DirectoryInfo dir => dir.FullName.GetHashCode(),
+            _                 => obj.GetHashCode()
+        };
     }
 
     public bool Equals(string? x, string? y) {

@@ -6,7 +6,7 @@ namespace FindDuplicateDirs;
 public class DirNameComparer : IEqualityComparer, IEqualityComparer<string>, IEqualityComparer<DirectoryInfo> {
     private static DirNameComparer? _instance;
     public static DirNameComparer Instance => _instance ??= new DirNameComparer();
-    
+
     public new bool Equals(object? x, object? y) {
         if (x is string xDir && y is string yDir) {
             return Path.GetFileName(xDir) == Path.GetFileName(yDir);
@@ -15,14 +15,11 @@ public class DirNameComparer : IEqualityComparer, IEqualityComparer<string>, IEq
     }
 
     int IEqualityComparer.GetHashCode(object obj) {
-        switch (obj) {
-            case string stringObj:
-                return Path.GetFileName(stringObj).GetHashCode();
-            case DirectoryInfo dir:
-                return dir.Name.GetHashCode();
-            default:
-                return obj.GetHashCode();
-        }
+        return obj switch {
+            string stringObj  => Path.GetFileName(stringObj).GetHashCode(),
+            DirectoryInfo dir => dir.Name.GetHashCode(),
+            _                 => obj.GetHashCode()
+        };
     }
 
     public bool Equals(string? x, string? y) {
