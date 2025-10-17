@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -323,6 +324,22 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
         var placement = context?.PlacementTarget as ListViewItem;
         if (placement?.Content is Tuple<DirView, DirView> target) {
             DuplicateList?.Remove(target);
+        }
+    }
+
+    private void OpenInFileExplorer(object sender, RoutedEventArgs e) {
+        var item = e.Source as MenuItem;
+        var context = item?.Parent as ContextMenu;
+        var placement = context?.PlacementTarget as ListViewItem;
+        if (placement?.Content is Tuple<DirView, DirView> target) {
+            var startInfo1 = new ProcessStartInfo(target.Item1.FullName) {
+                UseShellExecute = true,
+            };
+            var startInfo2 = new ProcessStartInfo(target.Item2.FullName) {
+                UseShellExecute = true,
+            };
+            Process.Start(startInfo1);
+            Process.Start(startInfo2);
         }
     }
 
