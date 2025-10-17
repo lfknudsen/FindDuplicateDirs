@@ -79,7 +79,9 @@
                     <GridView
                         ColumnHeaderToolTip="Identically-named sub-directory pairs.">
                         <GridViewColumn DisplayMemberBinding="{Binding Path=Item1.FullName}" Header="Path 1" />
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item1.DirSize}" Header="Size 1" />
                         <GridViewColumn DisplayMemberBinding="{Binding Path=Item2.FullName}" Header="Path 2" />
+                        <GridViewColumn DisplayMemberBinding="{Binding Path=Item2.DirSize}" Header="Size 2" />
                     </GridView>
                 </ListView.View>
             </ListView>
