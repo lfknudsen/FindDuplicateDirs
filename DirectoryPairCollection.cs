@@ -1,11 +1,14 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.IO;
 
 namespace FindDuplicateDirs;
 
-public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirView>> {
+public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirView>>,
+                                       IObserver<DirView> {
     public new bool Add(Tuple<DirView, DirView> item) {
         if (!Contains(item.Item1.FullName, item.Item2.FullName)) {
+            Subscribe(item);
             base.Add(item);
             return true;
         }
@@ -19,7 +22,9 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
 
     public bool Add(DirView a, DirView b) {
         if (!Contains(a.FullName, b.FullName)) {
-            base.Add(new Tuple<DirView, DirView>(a, b));
+            var tuple = new Tuple<DirView, DirView>(a, b);
+            Subscribe(tuple);
+            base.Add(tuple);
             return true;
         }
 
@@ -28,7 +33,11 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
 
     public bool Add(string pathA, string pathB) {
         if (!Contains(pathA, pathB)) {
-            base.Add(new Tuple<DirView, DirView>(new DirView(pathA), new DirView(pathB)));
+            var a = new DirView(pathA);
+            var b = new DirView(pathB);
+            var tuple = new Tuple<DirView, DirView>(a, b);
+            Subscribe(tuple);
+            base.Add(tuple);
             return true;
         }
 
@@ -41,8 +50,10 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
 
     public bool Remove(string fullName) {
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if (dirs.Item1.FullName == fullName || dirs.Item2.FullName == fullName) {
-                return base.Remove(dirs);
+            if ((dirs.Item1.FullName == fullName || dirs.Item2.FullName == fullName)
+             && base.Remove(dirs)) {
+                Unsubscribe(dirs);
+                return true;
             }
         }
 
@@ -51,8 +62,11 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
 
     public bool Remove(string fullNameA, string fullNameB) {
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if (dirs.Item1.FullName == fullNameA && dirs.Item2.FullName == fullNameB) {
-                return base.Remove(dirs);
+            if (dirs.Item1.FullName == fullNameA
+             && dirs.Item2.FullName == fullNameB
+             && base.Remove(dirs)) {
+                Unsubscribe(dirs);
+                return true;
             }
         }
 
@@ -66,8 +80,10 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
     public bool RemoveAll(string fullName) {
         bool changed = false;
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if (dirs.Item1.FullName == fullName || dirs.Item2.FullName == fullName) {
-                changed |= base.Remove(dirs);
+            if ((dirs.Item1.FullName == fullName || dirs.Item2.FullName == fullName)
+             && base.Remove(dirs)) {
+                Unsubscribe(dirs);
+                changed = true;
             }
         }
 
@@ -77,8 +93,11 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
     public bool RemoveAll(string fullNameA, string fullNameB) {
         bool changed = false;
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if (dirs.Item1.FullName == fullNameA && dirs.Item2.FullName == fullNameB) {
-                changed |= base.Remove(dirs);
+            if (dirs.Item1.FullName == fullNameA
+             && dirs.Item2.FullName == fullNameB
+             && base.Remove(dirs)) {
+                Unsubscribe(dirs);
+                changed = true;
             }
         }
 
@@ -113,5 +132,32 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
 
     public bool RemoveAll(DirectoryInfo target) {
         return RemoveAll(target.FullName);
+    }
+
+    //==========================================================================
+    // Event-related methods
+    //==========================================================================
+
+    private void Subscribe(Tuple<DirView, DirView> directoryPair) {
+        directoryPair.Item1.Subscribe(this);
+        directoryPair.Item2.Subscribe(this);
+    }
+
+    private void Unsubscribe(Tuple<DirView, DirView> tuple) {
+        tuple.Item1.Unsubscribe(this);
+        tuple.Item2.Unsubscribe(this);
+    }
+
+    private void Update() {
+        OnCollectionChanged(
+            new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+    }
+
+    public void OnCompleted() { }
+
+    public void OnError(Exception error) { }
+
+    public void OnNext(DirView value) {
+        Update();
     }
 }

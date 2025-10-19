@@ -155,9 +155,15 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
             return;
         }
 
-        DuplicateList?.Clear();
-        DirList?.RemoveDuplicates();
-        DuplicateList?.Add(FindDupDirectories());
+        if (DuplicateList is null) {
+            if (VERBOSE)
+                Console.WriteLine("Duplicate list null.");
+            return;
+        }
+
+        DuplicateList.Clear();
+        DirList.RemoveDuplicates();
+        DuplicateList.Add(FindDupDirectories());
     }
 
     /** Yields a collection of pairs of directories with identical names
@@ -167,7 +173,10 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
      * the directories in the <see cref="DirList"/>.
      */
     private IEnumerable<Tuple<DirView, DirView>> FindDupDirectories() {
-        if (DirList == null || DirList.Count < 2 || DuplicateList == null) yield break;
+        if (DirList == null || DirList.Count < 2 ||
+            DuplicateList == null || DuplicateList.Count != 0) {
+            yield break;
+        }
 
         var hashes = new HashSet<DirectoryInfo>(DirNameComparer.Instance);
         int count = DirList.Count;
@@ -178,7 +187,8 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
                 bool existing = hashes.TryGetValue(entry, out existingDirInfo);
                 if (existing && existingDirInfo != null) {
                     yield return new Tuple<DirView, DirView>(
-                        new DirView(existingDirInfo), new DirView(entry));
+                        new DirView(existingDirInfo),
+                        new DirView(entry));
                 } else {
                     hashes.Add(entry);
                 }
@@ -226,7 +236,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
             if (lastList is { IsArray : true }) {
                 DirList?.Add(lastList.AsArray);
             }
-        } catch (TomlParseException _) {
+        } catch (TomlParseException) {
             Console.Error.WriteLine("Failed to load config. Deleting it.");
             ClearConfigFile();
         }
@@ -260,7 +270,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
             writer.AutoFlush = false;
             WriteInitialDirectory(writer);
             WriteRecentDirectories(writer);
-        } catch (Exception _) {
+        } catch (Exception) {
             // Non-fatal. We just move on.
         }
     }
@@ -328,6 +338,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
     }
 
     private void OpenInFileExplorer(object sender, RoutedEventArgs e) {
+        DuplicateListView.UpdateLayout();
         var item = e.Source as MenuItem;
         var context = item?.Parent as ContextMenu;
         var placement = context?.PlacementTarget as ListViewItem;
@@ -344,10 +355,8 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
     }
 
     /** Attempts to subscribe to the <see cref="DirList"/> if it isn't already. */
-    private void EnsureSubscribed() {
-        if (!_subscribed) {
-            _subscribed = DirList?.Subscribe(this) != null;
-        }
+    private bool EnsureSubscribed() {
+        return _subscribed || (_subscribed = DirList?.Subscribe(this) != null);
     }
 
     public void OnCompleted() {
@@ -364,6 +373,8 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
      the <see cref="DirectoryCollection"/> is less than 2, and vice versa. */
     public void OnNext(DirectoryCollection value) {
         SetBtnStartState(value);
+        DuplicateList?.Clear();
+        DuplicateListView.UpdateLayout();
     }
 
     /** Sets the <c>IsEnabled</c> flag of the button which starts the duplication-finding process.
