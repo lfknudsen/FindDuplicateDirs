@@ -3,11 +3,7 @@ using System.IO;
 namespace FindDuplicateDirs;
 
 public class DirView : IObservable<DirView> {
-    private readonly DirectoryInfo _dir;
-
-    public string FullName => _dir.FullName;
-
-    public long Size { get; private set; } = -1;
+    public readonly string Path;
 
     /** Size (in bytes) of this directory.
      * Since this is computed asynchronously, the default value will determine how wide
@@ -17,25 +13,31 @@ public class DirView : IObservable<DirView> {
     private readonly List<IObserver<DirView>> _observers = [];
 
     public override string ToString() {
-        return FullName;
+        return Path;
     }
 
     public DirView(DirectoryInfo dir) {
-        _dir = dir;
+        Path = dir.FullName;
         _ = ComputeSize();
     }
 
-    public DirView(string path) : this(new DirectoryInfo(path)) {}
+    public DirView(string path) {
+        Path = path;
+        _ = ComputeSize();
+    }
 
     private async Task ComputeSize() {
-        if (!_dir.Exists)
+        if (!File.Exists(Path)) {
             return;
+        }
+
         await Task.Run(() => {
-            Size = _dir.EnumerateFiles()
+            var dir = new DirectoryInfo(Path);
+            long size = dir.EnumerateFiles()
                        .Aggregate<FileInfo, long>(0, Acc<FileInfo>)
-                 + _dir.EnumerateDirectories()
+                 + dir.EnumerateDirectories()
                        .Aggregate<DirectoryInfo, long>(0, Acc<DirectoryInfo>);
-            DirSize = Size.ToString();
+            DirSize = size.ToString();
         });
         NotifySubscribers();
     }
@@ -55,7 +57,8 @@ public class DirView : IObservable<DirView> {
 
     /** Removes the observer from the internal list of subscribers. This method
      * allows observers to be removed without keeping track of the IDisposable
-     * they received from <see cref="Subscribe"/>. */
+     * they received from <see cref="Subscribe"/> (which saves a lot of space in
+     * DirectoryPairCollection). */
     public void Unsubscribe(IObserver<DirView> observer) {
         _observers.Remove(observer);
     }

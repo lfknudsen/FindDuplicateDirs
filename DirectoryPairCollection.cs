@@ -7,7 +7,7 @@ namespace FindDuplicateDirs;
 public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirView>>,
                                        IObserver<DirView> {
     public new bool Add(Tuple<DirView, DirView> item) {
-        if (!Contains(item.Item1.FullName, item.Item2.FullName)) {
+        if (!Contains(item.Item1.Path, item.Item2.Path)) {
             Subscribe(item);
             base.Add(item);
             return true;
@@ -21,7 +21,7 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
     }
 
     public bool Add(DirView a, DirView b) {
-        if (!Contains(a.FullName, b.FullName)) {
+        if (!Contains(a.Path, b.Path)) {
             var tuple = new Tuple<DirView, DirView>(a, b);
             Subscribe(tuple);
             base.Add(tuple);
@@ -45,12 +45,12 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
     }
 
     public bool Contains(string pathA, string pathB) {
-        return this.Any(item => item.Item1.FullName == pathA && item.Item2.FullName == pathB);
+        return this.Any(item => item.Item1.Path == pathA && item.Item2.Path == pathB);
     }
 
     public bool Remove(string fullName) {
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if ((dirs.Item1.FullName == fullName || dirs.Item2.FullName == fullName)
+            if ((dirs.Item1.Path == fullName || dirs.Item2.Path == fullName)
              && base.Remove(dirs)) {
                 Unsubscribe(dirs);
                 return true;
@@ -62,8 +62,8 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
 
     public bool Remove(string fullNameA, string fullNameB) {
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if (dirs.Item1.FullName == fullNameA
-             && dirs.Item2.FullName == fullNameB
+            if (dirs.Item1.Path == fullNameA
+             && dirs.Item2.Path == fullNameB
              && base.Remove(dirs)) {
                 Unsubscribe(dirs);
                 return true;
@@ -80,7 +80,7 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
     public bool RemoveAll(string fullName) {
         bool changed = false;
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if ((dirs.Item1.FullName == fullName || dirs.Item2.FullName == fullName)
+            if ((dirs.Item1.Path == fullName || dirs.Item2.Path == fullName)
              && base.Remove(dirs)) {
                 Unsubscribe(dirs);
                 changed = true;
@@ -93,8 +93,8 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
     public bool RemoveAll(string fullNameA, string fullNameB) {
         bool changed = false;
         foreach (Tuple<DirView, DirView> dirs in this) {
-            if (dirs.Item1.FullName == fullNameA
-             && dirs.Item2.FullName == fullNameB
+            if (dirs.Item1.Path == fullNameA
+             && dirs.Item2.Path == fullNameB
              && base.Remove(dirs)) {
                 Unsubscribe(dirs);
                 changed = true;

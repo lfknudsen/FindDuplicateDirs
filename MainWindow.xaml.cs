@@ -185,6 +185,7 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
             foreach (DirectoryInfo entry in subs) {
                 DirectoryInfo? existingDirInfo;
                 bool existing = hashes.TryGetValue(entry, out existingDirInfo);
+
                 if (existing && existingDirInfo != null) {
                     yield return new Tuple<DirView, DirView>(
                         new DirView(existingDirInfo),
@@ -343,10 +344,10 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
         var context = item?.Parent as ContextMenu;
         var placement = context?.PlacementTarget as ListViewItem;
         if (placement?.Content is Tuple<DirView, DirView> target) {
-            var startInfo1 = new ProcessStartInfo(target.Item1.FullName) {
+            var startInfo1 = new ProcessStartInfo(target.Item1.Path) {
                 UseShellExecute = true,
             };
-            var startInfo2 = new ProcessStartInfo(target.Item2.FullName) {
+            var startInfo2 = new ProcessStartInfo(target.Item2.Path) {
                 UseShellExecute = true,
             };
             Process.Start(startInfo1);
