@@ -10,6 +10,8 @@ public class DirView : IObservable<DirView> {
      * the column will be by default. */
     public string DirSize { get; private set; } = "                              ";
 
+    public static bool ShowSizeInBytes { get; set; } = false;
+
     private readonly List<IObserver<DirView>> _observers = [];
 
     public override string ToString() {
@@ -37,7 +39,7 @@ public class DirView : IObservable<DirView> {
                            .Aggregate<FileInfo, long>(0, Acc)
                       + dir.EnumerateDirectories()
                            .Aggregate<DirectoryInfo, long>(0, Acc);
-            DirSize = size.ToString();
+            DirSize = FormatBytes(size);
         });
         NotifySubscribers();
     }
@@ -49,6 +51,46 @@ public class DirView : IObservable<DirView> {
     private static long Acc(long seed, DirectoryInfo element) {
         return seed + element.Size();
     }
+
+    private static string FormatBytes(long size) {
+        if (ShowSizeInBytes) {
+            return $"{size} B";
+        }
+
+        double truncatedSize = size;
+        UnitSymbols truncations = UnitSymbols.B;
+        while (truncatedSize >= 1000 && truncations <= UnitSymbols.ZB) {
+            truncatedSize /= 1000;
+            truncations++;
+        }
+
+        return $"{truncatedSize:0.##} " + UnitSymbolToString(truncations);
+    }
+
+    private enum UnitSymbols {
+        B,
+        KB,
+        MB,
+        GB,
+        TB,
+        PB,
+        EB,
+        ZB,
+    }
+
+    private static string UnitSymbolToString(UnitSymbols shorthand) => shorthand switch {
+        UnitSymbols.B  => "B",
+        UnitSymbols.KB => "KB",
+        UnitSymbols.MB => "MB",
+        UnitSymbols.GB => "GB",
+        UnitSymbols.TB => "TB",
+        UnitSymbols.PB => "PB",
+        UnitSymbols.EB => "EB",
+        UnitSymbols.ZB => "ZB",
+        _ => throw
+            new ArgumentOutOfRangeException(nameof(shorthand), shorthand,
+                                            "Cannot convert the shorthand into a string format.")
+    };
 
     public IDisposable Subscribe(IObserver<DirView> observer) {
         if (!_observers.Contains(observer)) {
