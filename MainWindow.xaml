@@ -45,6 +45,12 @@
                         <StatusBarItem
                             Content="{Binding Source={StaticResource DuplicateList}, Path=Count}"/>
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <StatusBarItem>
+                            <CheckBox Click="ToggleSizeFormatting"/>
+                        </StatusBarItem>
+                        <StatusBarItem> Show size in bytes</StatusBarItem>
+                    </StackPanel>
                 </DockPanel>
             </StatusBar>
             <Grid DockPanel.Dock="Left" Margin="2 3 2 0" ClipToBounds="True">

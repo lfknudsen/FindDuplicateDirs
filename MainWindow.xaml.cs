@@ -390,4 +390,17 @@ public partial class MainWindow : Window, IDisposable, IObserver<DirectoryCollec
             BtnStart.IsEnabled = value.Count >= 2;
         }
     }
+
+    private void ToggleSizeFormatting(object sender, RoutedEventArgs e) {
+        if (e.Source is not CheckBox cb) {
+            throw new ArgumentException("Expected the source of e to be a CheckBox", nameof(e));
+        }
+
+        if (cb.IsChecked == null) {
+            throw new NullReferenceException($"{nameof(cb.IsChecked)} should not be null.");
+        }
+
+        DirView.ShowSizeInBytes = (bool)cb.IsChecked;
+        DuplicateList?.ComputeSizes();
+    }
 }

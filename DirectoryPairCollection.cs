@@ -134,6 +134,15 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
         return RemoveAll(target.FullName);
     }
 
+    public void ComputeSizes() {
+        foreach (Tuple<DirView, DirView> dirs in this) {
+            _ = dirs.Item1.ComputeSize();
+            _ = dirs.Item2.ComputeSize();
+        }
+
+        Update();
+    }
+
     //==========================================================================
     // Event-related methods
     //==========================================================================
@@ -148,7 +157,7 @@ public class DirectoryPairCollection : ObservableCollection<Tuple<DirView, DirVi
         tuple.Item2.Unsubscribe(this);
     }
 
-    private void Update() {
+    public void Update() {
         OnCollectionChanged(
             new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }

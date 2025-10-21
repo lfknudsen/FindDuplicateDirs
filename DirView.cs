@@ -3,6 +3,8 @@ using System.IO;
 namespace FindDuplicateDirs;
 
 public class DirView : IObservable<DirView> {
+    public static bool ShowSizeInBytes { get; set; } = false;
+
     public readonly string Path;
     public readonly DateTime LastModified;
     public readonly DateTime Created;
@@ -12,8 +14,6 @@ public class DirView : IObservable<DirView> {
      * the column will be by default. */
     public string DirSize { get; private set; } = "                              ";
 
-    public static bool ShowSizeInBytes { get; set; } = false;
-
     private readonly List<IObserver<DirView>> _observers = [];
 
     public override string ToString() {
@@ -21,6 +21,9 @@ public class DirView : IObservable<DirView> {
     }
 
     public DirView(DirectoryInfo dir) {
+        if (!dir.Exists) {
+            throw new DirectoryNotFoundException(dir.FullName);
+        }
         Path = dir.FullName;
         LastModified = dir.LastWriteTime;
         Created = dir.CreationTime;
@@ -28,15 +31,19 @@ public class DirView : IObservable<DirView> {
     }
 
     public DirView(string path) {
+        if (!Directory.Exists(path)) {
+            throw new DirectoryNotFoundException(path);
+        }
+
         Path = path;
         LastModified = Directory.GetLastWriteTime(path);
         Created = Directory.GetCreationTime(path);
         _ = ComputeSize();
     }
 
-    private async Task ComputeSize() {
+    public async Task ComputeSize() {
         if (!Directory.Exists(Path)) {
-            return;
+            throw new DirectoryNotFoundException(Path);
         }
 
         await Task.Run(() => {
