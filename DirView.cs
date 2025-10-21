@@ -4,6 +4,8 @@ namespace FindDuplicateDirs;
 
 public class DirView : IObservable<DirView> {
     public readonly string Path;
+    public readonly DateTime LastModified;
+    public readonly DateTime Created;
 
     /** Size (in bytes) of this directory.
      * Since this is computed asynchronously, the default value will determine how wide
@@ -20,11 +22,15 @@ public class DirView : IObservable<DirView> {
 
     public DirView(DirectoryInfo dir) {
         Path = dir.FullName;
+        LastModified = dir.LastWriteTime;
+        Created = dir.CreationTime;
         _ = ComputeSize();
     }
 
     public DirView(string path) {
         Path = path;
+        LastModified = Directory.GetLastWriteTime(path);
+        Created = Directory.GetCreationTime(path);
         _ = ComputeSize();
     }
 
