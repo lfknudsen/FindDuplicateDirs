@@ -27,31 +27,34 @@ public class DirView : IObservable<DirView> {
     }
 
     private async Task ComputeSize() {
-        if (!File.Exists(Path)) {
+        if (!Directory.Exists(Path)) {
             return;
         }
 
         await Task.Run(() => {
             var dir = new DirectoryInfo(Path);
             long size = dir.EnumerateFiles()
-                       .Aggregate<FileInfo, long>(0, Acc<FileInfo>)
-                 + dir.EnumerateDirectories()
-                       .Aggregate<DirectoryInfo, long>(0, Acc<DirectoryInfo>);
+                           .Aggregate<FileInfo, long>(0, Acc)
+                      + dir.EnumerateDirectories()
+                           .Aggregate<DirectoryInfo, long>(0, Acc);
             DirSize = size.ToString();
         });
         NotifySubscribers();
     }
 
-    private static long Acc<T>(long seed, FileInfo element) {
+    private static long Acc(long seed, FileInfo element) {
         return seed + element.Size();
     }
 
-    private static long Acc<T>(long seed, DirectoryInfo element) {
+    private static long Acc(long seed, DirectoryInfo element) {
         return seed + element.Size();
     }
 
     public IDisposable Subscribe(IObserver<DirView> observer) {
-        _observers.Add(observer);
+        if (!_observers.Contains(observer)) {
+            _observers.Add(observer);
+        }
+
         return new Unsubscriber(this, observer);
     }
 
