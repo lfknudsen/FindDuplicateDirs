@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IO;
 
 namespace FindDuplicateDirs;
@@ -6,8 +7,8 @@ public class DirView : IObservable<DirView> {
     public static bool ShowSizeInBytes { get; set; } = false;
 
     public readonly string Path;
-    public readonly DateTime LastModified;
-    public readonly DateTime Created;
+    public string LastModified { get; }
+    public string Created  { get; }
 
     /** Size (in bytes) of this directory.
      * Since this is computed asynchronously, the default value will determine how wide
@@ -25,8 +26,8 @@ public class DirView : IObservable<DirView> {
             throw new DirectoryNotFoundException(dir.FullName);
         }
         Path = dir.FullName;
-        LastModified = dir.LastWriteTime;
-        Created = dir.CreationTime;
+        LastModified = dir.LastWriteTime.ToString(CultureInfo.CurrentCulture);
+        Created = dir.CreationTime.ToString(CultureInfo.CurrentCulture);
         _ = ComputeSize();
     }
 
@@ -36,8 +37,8 @@ public class DirView : IObservable<DirView> {
         }
 
         Path = path;
-        LastModified = Directory.GetLastWriteTime(path);
-        Created = Directory.GetCreationTime(path);
+        LastModified = Directory.GetLastWriteTime(path).ToString(CultureInfo.CurrentCulture);
+        Created = Directory.GetCreationTime(path).ToString(CultureInfo.CurrentCulture);
         _ = ComputeSize();
     }
 
